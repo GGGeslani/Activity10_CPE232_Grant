@@ -1,0 +1,116 @@
+#Elasticsearch
+- name: Add Elasticsearch apt key
+  apt_key:
+   url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+   state: present
+
+- name: Install APT repository
+  apt:
+    name: apt-transport-https
+    state: present
+
+- name: Adding Elasticsearch repo
+  apt_repository:
+   repo: deb https://artifacts.elastic.co/packages/7.x/apt stable main 
+   state: present
+
+- name: Install Elasticsearch
+  apt:
+   name: elasticsearch
+   update_cache: yes
+
+- name: Updating the config file to allow outside access
+  lineinfile:
+   destfile: /etc/elasticsearch/elasticsearch.yml
+   regexp: 'network.host:'
+   line: 'network.host: 0.0.0.0'
+
+- name: Updating the port in config file 
+  lineinfile:
+   destfile: /etc/elasticsearch/elasticsearch.yml
+   regexp: 'http.port:'
+   line: 'http.port: 9200'
+
+- name: Updating the config file to allow outside access
+  lineinfile:
+   destfile: /etc/elasticsearch/elasticsearch.yml
+   regexp: 'cluster.initial_master_nodes:'
+   line: 'cluster.initial_master_nodes: ["{{ ansible_default_ipv4.address }}"]'
+
+- name: Starting Elasticsearch
+  service:
+   name: elasticsearch
+   state: started
+
+#Kibana
+- name: Install Kibana with apt
+  apt:
+   name: kibana
+   update_cache: yes
+
+- name: Updating the config file to allow outside access
+  lineinfile:
+   destfile: /etc/kibana/kibana.yml
+   regexp: 'server.host:'
+   line: 'server.host: 0.0.0.0'
+
+- name: Defining server port
+  lineinfile:
+   destfile: /etc/kibana/kibana.yml
+   regexp: 'server.port:'
+   line: 'server.port: 5601'
+
+- name: Defining Elasticsearch URL
+  lineinfile:
+   destfile: /etc/kibana/kibana.yml
+   regexp: 'elasticsearch.hosts:'
+   line: 'elasticsearch.hosts: "http://localhost:9200"'
+
+- name: Starting Kibana
+  service:
+   name: kibana
+   state: started
+
+#Logstash
+- name: Install logstash with apt
+  apt:
+   name: logstash
+   update_cache: yes
+
+- name: Starting logstash
+  service:
+   name: logstash
+   state: started
+
+#Metricbeat
+- name: Install Metricbeat with apt
+  apt:
+   name: metricbeat
+   update_cache: yes
+
+- name: Starting Metricbeat
+  service:
+   name: metricbeat
+   state: started
+
+#Restart Services
+
+- name: Restart Elasticsearch
+  service:
+    name: elasticsearch
+    state: restarted
+
+- name: Restart Logstash
+  service:
+    name: logstash
+    state: restarted
+
+- name: Restart Kibana
+  service:
+    name: kibana
+    state: restarted
+
+- name: Restart Metricbeat
+  service:
+    name: metricbeat
+    state: restarted
